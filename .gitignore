@@ -1,0 +1,17 @@
+# TensorBoard / logging
+**/runs/
+**/tb/
+**/logs/
+
+# Videos, checkpoints
+videos/
+checkpoints/
+
+# W&B
+wandb/
+
+#venv
+.venv/
+
+#pycache
+__pycache__/
