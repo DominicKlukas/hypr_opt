@@ -20,7 +20,7 @@ DEFAULT_STORAGE_URL = (
     "@aws-0-us-west-2.pooler.supabase.com:6543/postgres?sslmode=require"
 )
 
-DEFAULT_STUDY = "supabase_test_2"
+DEFAULT_STUDY = "supabase_test_3"
 
 
 def objective(x) -> float:
@@ -110,7 +110,7 @@ def main() -> None:
     )
 
 
-    n_trials = int(os.environ.get("N_TRIALS", "10"))
+    n_trials = int(os.environ.get("N_TRIALS", "5"))
 
     for _ in range(n_trials):
         trial = retry_db(study.ask)

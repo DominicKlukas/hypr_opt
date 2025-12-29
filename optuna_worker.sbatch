@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=optuna_test
-#SBATCH --output=logs/%x_%j_%a.out
-#SBATCH --error=logs/%x_%j_%a.err
+#SBATCH --output=logs/%x_%A_%a.out
+#SBATCH --error=logs/%x_%A_%a.err
 #SBATCH --time=00:10:00
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=1G
@@ -19,5 +19,5 @@ export WHERE="cluster"
 export RUN_ID="${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
 
 # Run
-/project/6107222/klukasd/.venv/bin/python optuna_worker.py
+/project/6107222/klukasd/.venv/bin/python hypr_opt/optuna_worker.py
 
