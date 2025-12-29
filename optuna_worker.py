@@ -23,15 +23,7 @@ DEFAULT_STORAGE_URL = (
 DEFAULT_STUDY = "supabase_test_2"
 
 
-def objective(trial: optuna.Trial) -> float:
-    trial.set_user_attr("run_id", RUN_ID)
-    trial.set_user_attr("host", HOST)
-    trial.set_user_attr("pid", PID)
-    trial.set_user_attr("where", os.environ.get("WHERE", "local"))
-    trial.set_user_attr("slurm_job_id", os.environ.get("SLURM_JOB_ID", ""))
-    trial.set_user_attr("slurm_array_task_id", os.environ.get("SLURM_ARRAY_TASK_ID", ""))
-
-    x = trial.suggest_float("x", -10, 10)
+def objective(x) -> float:
     return (x - 2) ** 2
 
 
@@ -52,9 +44,10 @@ def is_pool_exhausted_error(exc: BaseException) -> bool:
         "MaxClientsInSessionMode" in msg
         or "max clients reached" in msg.lower()
         or "too many clients" in msg.lower()
+        or "too many connections" in msg.lower()
     )
 
-
+"""
 def optimize_with_retries(study: optuna.Study, n_trials: int) -> None:
     max_retries = int(os.environ.get("OPTUNA_MAX_RETRIES", "200"))
     base_sleep = float(os.environ.get("OPTUNA_RETRY_BASE_SLEEP", "0.5"))
@@ -83,6 +76,26 @@ def optimize_with_retries(study: optuna.Study, n_trials: int) -> None:
                 time.sleep(sleep_s)
                 continue
             raise
+"""
+
+def retry_db(fn, *, max_retries=200, base_sleep=0.5, max_sleep=60.0):
+    retries = 0
+    while True:
+        try:
+            return fn()
+        except (
+            optuna.exceptions.StorageInternalError,
+            sqlalchemy.exc.OperationalError,
+            psycopg2.OperationalError,
+        ) as e:
+            if not is_pool_exhausted_error(e):
+                raise
+            retries += 1
+            if retries > max_retries:
+                raise RuntimeError(f"Too many DB retry failures ({max_retries}).") from e
+            sleep_s = min(max_sleep, base_sleep * (2 ** min(retries, 10)))
+            sleep_s += random.uniform(0, 0.5)
+            time.sleep(sleep_s)
 
 
 def main() -> None:
@@ -96,8 +109,28 @@ def main() -> None:
         direction="minimize",
     )
 
+
     n_trials = int(os.environ.get("N_TRIALS", "10"))
-    optimize_with_retries(study, n_trials)
+
+    for _ in range(n_trials):
+        trial = retry_db(study.ask)
+
+        # 2) Set metadata + sample params (these are DB writes too, so retry them)
+        def setup_and_sample():
+            trial.set_user_attr("run_id", RUN_ID)
+            trial.set_user_attr("host", HOST)
+            trial.set_user_attr("pid", PID)
+            trial.set_user_attr("where", os.environ.get("WHERE", "local"))
+            trial.set_user_attr("slurm_job_id", os.environ.get("SLURM_JOB_ID", ""))
+            trial.set_user_attr("slurm_array_task_id", os.environ.get("SLURM_ARRAY_TASK_ID", ""))
+            x = trial.suggest_float("x", -10, 10)
+            return {"x": x}
+
+        params = retry_db(setup_and_sample)
+
+        value = objective(params['x'])
+
+        retry_db(lambda: study.tell(trial, value))
 
     print("best_value =", study.best_value)
     print("best_params =", study.best_params)
