@@ -22,11 +22,7 @@ DEFAULT_STORAGE_URL = (
     "@aws-0-us-west-2.pooler.supabase.com:6543/postgres?sslmode=require"
 )
 
-DEFAULT_STUDY = "supabase_test_3"
-
-
-def objective(x) -> float:
-    return (x - 2) ** 2
+DEFAULT_STUDY = "supabase_test_4"
 
 
 def make_storage() -> optuna.storages.RDBStorage:
@@ -148,7 +144,7 @@ def main() -> None:
         pruner=pruner,
     )
 
-    n_trials = int(os.environ.get("N_TRIALS", "10"))
+    n_trials = int(os.environ.get("N_TRIALS", "5"))
 
     for _ in range(n_trials):
         run_one_trial_ask_tell(study)
