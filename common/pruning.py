@@ -9,6 +9,7 @@ class PruneReporter:
     eval_interval_steps: int
     last_eval_step: int = 0
     eval_k: int = 0
+    retry_db: Optional[callable] = None  # inject from worker
 
     def should_eval(self, global_step: int) -> bool:
         return (global_step - self.last_eval_step) >= self.eval_interval_steps
@@ -19,8 +20,15 @@ class PruneReporter:
             self.eval_k += 1
             return
 
-        # Use eval_k as the Optuna step (monotonic, comparable across runs)
-        self.trial.report(value, step=self.eval_k)
+
+        def _do_report():
+            self.trial.report(value, step=self.eval_k)
+
+        if self.retry_db is not None:
+            self.retry_db(_do_report)
+        else:
+            _do_report()
+
         self.eval_k += 1
 
         if self.trial.should_prune():
