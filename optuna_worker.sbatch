@@ -1,12 +1,18 @@
 #!/bin/bash
 #SBATCH --job-name=optuna_test
-#SBATCH --output=logs/%x_%j_%a.out
-#SBATCH --error=logs/%x_%j_%a.err
-#SBATCH --time=00:10:00
+#SBATCH --output=logs/%x_%A_%a.out
+#SBATCH --error=logs/%x_%A_%a.err
+#SBATCH --time=00:30:00
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=1G
-#SBATCH --array=1-100
+#SBATCH --array=1
 #SBATCH --nodes=1
+
+export OMP_NUM_THREADS=1
+export MKL_NUM_THREADS=1
+export OPENBLAS_NUM_THREADS=1
+export VECLIB_MAXIMUM_THREADS=1
+export NUMEXPR_NUM_THREADS=1
 
 set -euo pipefail
 
@@ -19,5 +25,5 @@ export WHERE="cluster"
 export RUN_ID="${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
 
 # Run
-/project/6107222/klukasd/.venv/bin/python optuna_worker.py
+/project/6107222/klukasd/.venv/bin/python hypr_opt/optuna_worker.py
 

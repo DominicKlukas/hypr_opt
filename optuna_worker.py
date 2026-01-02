@@ -20,8 +20,7 @@ RUN_ID = os.environ.get("RUN_ID", str(uuid.uuid4()))
 HOST = socket.gethostname()
 PID = os.getpid()
 
-DEFAULT_STUDY = "supabase_test_2"
-
+DEFAULT_STUDY = "supabase_test_0"
 
 def run_one_trial_ask_tell(study: optuna.Study) -> None:
     trial = retry_db(study.ask)
@@ -68,7 +67,7 @@ def main() -> None:
         study_name=study_name,
         storage=storage,
         load_if_exists=True,
-        direction="minimize",
+        direction="maximize",
         sampler=sampler,
         pruner=pruner,
     )
