@@ -16,7 +16,7 @@ def finalize_args(args, filename: str):
     args.exp_name = getattr(args, "exp_name", exp_name)  # optional
     return args
 
-def setup_wandb(args, trial=None):
+def setup_wandb(args, RUN_ID, trial=None):
     if not args.track:
         return
     import wandb
