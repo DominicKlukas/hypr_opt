@@ -6,7 +6,7 @@ def finalize_args(args, filename: str):
     """
     Mutates args:
     - computes batch sizes
-    - sets run_name
+    - computes number of iterations with batch sizes and time steps
     """
     args.batch_size = int(args.num_envs * args.num_steps)
     args.minibatch_size = int(args.batch_size // args.num_minibatches)
@@ -14,27 +14,22 @@ def finalize_args(args, filename: str):
 
     exp_name = os.path.basename(filename).replace(".py", "")
     args.exp_name = getattr(args, "exp_name", exp_name)  # optional
-    if not getattr(args, "run_name", None) or args.run_name == "run":
-        args.run_name = f"{args.env_id}__{exp_name}__{args.seed}__{int(time.time())}"
-
     return args
 
+def setup_wandb(args, trial=None):
+    if not args.track:
+        return
+    import wandb
 
-def setup_wandb(args):
-    """
-    Optional WandB + TensorBoard setup.
-    Returns a SummaryWriter.
-    """
-
-    if args.track:
-        import wandb
-        wandb.init(
-            project=args.wandb_project_name,
-            entity=args.wandb_entity,
-            sync_tensorboard=True,
-            config=vars(args),
-            name=args.run_name,
-            monitor_gym=True,
-            save_code=True,
-        )
-
+    wandb.init(
+        project=args.wandb_project_name,
+        entity=args.wandb_entity,
+        name=args.run_name,                 # unique per trial
+        group=f"{args.env_id}__{args.exp_name}__{RUN_ID}",  # all trials together
+        tags=[args.env_id, f"trial={trial.number}" if trial else "manual"],
+        sync_tensorboard=True,
+        config=vars(args) | ({"trial_number": trial.number} if trial else {}),
+        monitor_gym=True,
+        save_code=True,
+        reinit=True,
+    )

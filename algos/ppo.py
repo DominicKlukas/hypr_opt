@@ -341,6 +341,9 @@ def train(args: Args, run_dir: str, trial: optuna.Trial | None = None) -> float:
     envs.close()
     evaluator.close()
     logger.close()
+    if args.track:
+        import wandb
+        wandb.finish()
     return mean_ret
 
 if __name__ == "__main__":
