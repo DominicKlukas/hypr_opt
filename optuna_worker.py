@@ -67,7 +67,7 @@ def main() -> None:
         study_name=study_name,
         storage=storage,
         load_if_exists=True,
-        direction="minimize",
+        direction="maximize",
         sampler=sampler,
         pruner=pruner,
     )
