@@ -2,7 +2,6 @@
 from dataclasses import dataclass
 from typing import Optional
 import optuna
-from common.optuna_db import retry_db
 
 @dataclass
 class PruneReporter:
@@ -20,7 +19,7 @@ class PruneReporter:
             self.eval_k += 1
             return
 
-
+        from common.optuna_db import retry_db
         def _do_report():
             self.trial.report(value, step=self.eval_k)
 

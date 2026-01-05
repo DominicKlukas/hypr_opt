@@ -346,13 +346,17 @@ def train(args: Args, run_dir: str, trial: optuna.Trial | None = None) -> float:
         wandb.finish()
     return mean_ret
 
-if __name__ == "__main__":
+
+def main():
     args = tyro.cli(Args)
     args = finalize_args(args, __file__)
-    setup_wandb(args)
+    setup_wandb(args, "TEST_RUN")
 
     # pick a run_dir for manual runs
     run_dir = os.path.join(args.log_dir, args.exp_name, args.run_name)
     os.makedirs(run_dir, exist_ok=True)
 
     train(args, run_dir=run_dir, trial=None)
+
+if __name__ == "__main__":
+    main()

@@ -17,9 +17,9 @@ def objective(trial: optuna.Trial) -> float:
     gae = trial.suggest_float("gae_lambda", 0.90, 0.99)
     num_steps = trial.suggest_categorical("num_steps", [64, 128, 256])
     args = Args(
-        env_id="Cartpole-v1",
+        env_id="LunarLander-v3",
         wandb_project_name="Parallel_RL_Test",
-        total_timesteps=500_000,
+        total_timesteps=1_000_000,
         eval_interval=50_000,
         eval_episodes=10,
         cuda=False,
