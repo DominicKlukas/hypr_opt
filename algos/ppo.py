@@ -48,6 +48,8 @@ class Args:
     """run evaluation every N training iterations"""
     eval_episodes: int = 100
     """number of episodes per evaluation"""
+    vector_env_mode: str = "async"
+    """vector env backend: async (cluster) or sync (local/sandbox)"""
 
     # Algorithm specific arguments
     env_id: str = "CartPole-v1"
@@ -163,11 +165,11 @@ def train(args: Args, run_dir: str, trial: optuna.Trial | None = None) -> float:
     device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
 
     # env setup
-    envs = gym.vector.AsyncVectorEnv(
-        [make_env(args.env_id, i, args.capture_video, run_name) for i in range(args.num_envs)],
-        daemon=True,
-        shared_memory=False
-    )
+    env_fns = [make_env(args.env_id, i, args.capture_video, run_name) for i in range(args.num_envs)]
+    if args.vector_env_mode == "sync":
+        envs = gym.vector.SyncVectorEnv(env_fns)
+    else:
+        envs = gym.vector.AsyncVectorEnv(env_fns, daemon=True, shared_memory=False)
     assert isinstance(envs.single_action_space, gym.spaces.Discrete), "only discrete action space is supported"
 
     evaluator = Evaluate(make_env(args.env_id, args.num_envs, args.capture_video, run_name))

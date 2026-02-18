@@ -14,11 +14,12 @@ if __name__ == "__main__":
     args = Args(
         env_id="LunarLander-v3",
         wandb_project_name="Parallel_RL_Test",
-        total_timesteps=1_000_000,
+        total_timesteps=20_000,
         eval_interval=50_000,
-        eval_episodes=10,
+        eval_episodes=3,
         cuda=False,
         track=False,
+        vector_env_mode="sync",
     )
 
     # make exp_name correctly from your algo file, not run_dir

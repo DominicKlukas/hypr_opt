@@ -14,11 +14,12 @@ if __name__ == "__main__":
     args = Args(
         env_id="CartPole-v1",
         wandb_project_name="Parallel_RL_Test",
-        total_timesteps=500_000,
+        total_timesteps=50_000,
         eval_interval=50_000,
         eval_episodes=10,
         cuda=False,
         track=False,
+        vector_env_mode="sync",
     )
 
     # make exp_name correctly from your algo file, not run_dir

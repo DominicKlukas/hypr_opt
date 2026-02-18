@@ -1,0 +1,23 @@
+--index-url https://download.pytorch.org/whl/cpu
+--extra-index-url https://pypi.org/simple
+
+torch==2.10.0+cpu
+gymnasium==1.2.3
+gymnasium-robotics==1.4.2
+gymnasium[box2d]==1.2.3
+mujoco==3.5.0
+optuna==4.7.0
+tyro==1.0.6
+tensorboard==2.20.0
+wandb==0.25.0
+numpy==1.26.4
+scipy==1.17.0
+joblib==1.5.3
+lie-learn==0.0.2
+pymanopt==2.2.1
+autograd==1.8.0
+sqlalchemy==2.0.46
+psycopg2-binary==2.9.11
+
+# Install escnn separately without optional Fortran dependency:
+#   pip install --no-deps escnn==1.0.11
