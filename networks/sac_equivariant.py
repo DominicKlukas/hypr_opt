@@ -2,8 +2,8 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from escnn import gspaces
-from escnn import nn as enn
+import escnn.gspaces as gspaces
+import escnn.nn as enn
 
 
 LOG_STD_MAX = 2
