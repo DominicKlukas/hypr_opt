@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import importlib
 import os
 import socket
 import uuid
@@ -6,28 +7,28 @@ import uuid
 import optuna
 
 from common.optuna_db import make_storage, retry_db
-from experiments.sac_fetch_pick_and_place_dense_v4.objective import objective as objective_pick
-from experiments.sac_fetch_push_dense_v4.objective import objective as objective_push
-from experiments.sac_fetch_reach_dense_v4.objective import objective as objective_reach
-from experiments.sac_fetch_slide_dense_v4.objective import objective as objective_slide
-from experiments.sac_fetch_slide_dense_v4_baseline.objective import objective as objective_slide_baseline
 
 
 RUN_ID = os.environ.get("RUN_ID", str(uuid.uuid4()))
 HOST = socket.gethostname()
 PID = os.getpid()
 
-TASK_TO_OBJECTIVE = {
+TASK_TO_MODULE_PATH = {
     "equivariant": {
-        "reach": objective_reach,
-        "push": objective_push,
-        "pick": objective_pick,
-        "slide": objective_slide,
+        "reach": "experiments.sac_fetch_reach_dense_v4.objective",
+        "push": "experiments.sac_fetch_push_dense_v4.objective",
+        "pick": "experiments.sac_fetch_pick_and_place_dense_v4.objective",
+        "slide": "experiments.sac_fetch_slide_dense_v4.objective",
     },
     "baseline": {
-        "slide": objective_slide_baseline,
+        "slide": "experiments.sac_fetch_slide_dense_v4_baseline.objective",
     },
 }
+
+def resolve_objective(model: str, task: str):
+    module_path = TASK_TO_MODULE_PATH[model][task]
+    module = importlib.import_module(module_path)
+    return module.objective
 
 
 def run_one_trial(study: optuna.Study, objective_fn) -> None:
@@ -57,10 +58,10 @@ def run_one_trial(study: optuna.Study, objective_fn) -> None:
 def main() -> None:
     model = os.environ.get("FETCH_MODEL", "equivariant").lower().strip()
     task = os.environ.get("FETCH_TASK", "reach").lower().strip()
-    if model not in TASK_TO_OBJECTIVE:
-        raise ValueError(f"Unknown FETCH_MODEL={model}. Use one of: {', '.join(TASK_TO_OBJECTIVE)}")
-    if task not in TASK_TO_OBJECTIVE[model]:
-        raise ValueError(f"Unknown FETCH_TASK={task} for model={model}. Use one of: {', '.join(TASK_TO_OBJECTIVE[model])}")
+    if model not in TASK_TO_MODULE_PATH:
+        raise ValueError(f"Unknown FETCH_MODEL={model}. Use one of: {', '.join(TASK_TO_MODULE_PATH)}")
+    if task not in TASK_TO_MODULE_PATH[model]:
+        raise ValueError(f"Unknown FETCH_TASK={task} for model={model}. Use one of: {', '.join(TASK_TO_MODULE_PATH[model])}")
 
     storage = make_storage()
     study_name = os.environ.get("OPTUNA_STUDY", f"fetch_{task}_{model}")
@@ -82,7 +83,7 @@ def main() -> None:
     )
 
     n_trials = int(os.environ.get("N_TRIALS", "2"))
-    objective_fn = TASK_TO_OBJECTIVE[model][task]
+    objective_fn = resolve_objective(model, task)
 
     for _ in range(n_trials):
         run_one_trial(study, objective_fn)

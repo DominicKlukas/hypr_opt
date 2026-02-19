@@ -13,9 +13,10 @@ def build_trial_args(base: Args, trial: optuna.Trial) -> Args:
         q_lr=trial.suggest_float("q_lr", 1e-4, 2e-3, log=True),
         gamma=trial.suggest_float("gamma", 0.95, 0.999),
         tau=trial.suggest_float("tau", 1e-3, 2e-2, log=True),
-        batch_size=trial.suggest_categorical("batch_size", [128, 256, 512]),
-        dihedral_n=trial.suggest_categorical("dihedral_n", [4, 8, 16]),
-        reg_rep_n=trial.suggest_categorical("reg_rep_n", [32, 64, 128]),
+        # Narrowed for cluster practicality: avoids very slow/high-cost equivariant configs.
+        batch_size=trial.suggest_categorical("batch_size", [128, 256]),
+        dihedral_n=trial.suggest_categorical("dihedral_n", [4, 8]),
+        reg_rep_n=trial.suggest_categorical("reg_rep_n", [16, 32, 64]),
     )
 
 

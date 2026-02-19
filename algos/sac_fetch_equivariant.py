@@ -67,6 +67,7 @@ class Args:
     eval_interval: int = 25_000
     eval_episodes: int = 25
     vector_env_mode: str = "async"
+    stdout_log_interval: int = 1_000
 
 
 def make_env(env_id: str, seed: int, idx: int, capture_video: bool, run_name: str):
@@ -111,6 +112,14 @@ def train(args: Args, run_dir: str, trial: optuna.Trial | None = None) -> float:
     torch.backends.cudnn.deterministic = args.torch_deterministic
 
     device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
+    print(
+        (
+            f"[start] env={args.env_id} device={device} total_timesteps={args.total_timesteps} "
+            f"num_envs={args.num_envs} dihedral_n={args.dihedral_n} reg_rep_n={args.reg_rep_n} "
+            f"batch_size={args.batch_size} eval_interval={args.eval_interval}"
+        ),
+        flush=True,
+    )
 
     if args.track:
         setup_wandb(args, run_id=args.run_name, trial=trial)
@@ -233,12 +242,24 @@ def train(args: Args, run_dir: str, trial: optuna.Trial | None = None) -> float:
                     global_step,
                     prefix="losses",
                 )
+                if args.stdout_log_interval > 0 and global_step % args.stdout_log_interval == 0:
+                    print(
+                        (
+                            f"[train] step={global_step} sps={sps} qf_loss={(qf_loss.item() / 2.0):.4f} "
+                            f"alpha={alpha:.4f} device={device}"
+                        ),
+                        flush=True,
+                    )
 
         if pr.should_eval(global_step) or (global_step + 1 >= args.total_timesteps):
             eval_return = evaluate_policy(actor, eval_env, device, n_episodes=args.eval_episodes)
             logger.log_scalar("charts/eval_return", eval_return, global_step)
             best_eval = max(best_eval, eval_return)
             pr.report(eval_return, global_step)
+            print(
+                f"[eval] step={global_step} eval_return={eval_return:.4f} best_eval={best_eval:.4f}",
+                flush=True,
+            )
 
     envs.close()
     eval_env.close()
@@ -249,6 +270,7 @@ def train(args: Args, run_dir: str, trial: optuna.Trial | None = None) -> float:
 
         wandb.finish()
 
+    print(f"[done] best_eval={best_eval:.4f}", flush=True)
     return best_eval
 
 
