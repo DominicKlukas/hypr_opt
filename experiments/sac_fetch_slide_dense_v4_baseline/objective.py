@@ -9,7 +9,7 @@ def objective(trial: optuna.Trial) -> float:
         total_timesteps=1_000_000,
         eval_interval=25_000,
         eval_episodes=25,
-        cuda=False,
+        cuda=True,
         track=False,
         policy_lr=trial.suggest_float("policy_lr", 1e-4, 1e-3, log=True),
         q_lr=trial.suggest_float("q_lr", 1e-4, 2e-3, log=True),

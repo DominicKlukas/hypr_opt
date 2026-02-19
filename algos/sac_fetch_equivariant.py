@@ -111,7 +111,10 @@ def train(args: Args, run_dir: str, trial: optuna.Trial | None = None) -> float:
     torch.manual_seed(args.seed)
     torch.backends.cudnn.deterministic = args.torch_deterministic
 
-    device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
+    cuda_available = torch.cuda.is_available()
+    device = torch.device("cuda" if cuda_available and args.cuda else "cpu")
+    if args.cuda and not cuda_available:
+        print("[warn] cuda=True requested but torch.cuda.is_available() is False; falling back to CPU.", flush=True)
     print(
         (
             f"[start] env={args.env_id} device={device} total_timesteps={args.total_timesteps} "
