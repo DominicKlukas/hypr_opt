@@ -13,4 +13,9 @@ def objective(trial: optuna.Trial) -> float:
         cuda=True,
         track=False,
     )
-    return run_objective(base, trial, run_tag="sac_fetch_push_dense_v4")
+    return run_objective(
+        base,
+        trial,
+        run_tag="sac_fetch_push_dense_v4",
+        sweep_mode="pushpick_v1",
+    )

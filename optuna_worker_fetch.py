@@ -21,6 +21,8 @@ TASK_TO_MODULE_PATH = {
         "slide": "experiments.sac_fetch_slide_dense_v4.objective",
     },
     "baseline": {
+        "push": "experiments.sac_fetch_push_dense_v4_baseline.objective",
+        "pick": "experiments.sac_fetch_pick_and_place_dense_v4_baseline.objective",
         "slide": "experiments.sac_fetch_slide_dense_v4_baseline.objective",
     },
 }

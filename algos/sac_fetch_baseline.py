@@ -82,11 +82,11 @@ def make_env(env_id: str, seed: int, idx: int, capture_video: bool, run_name: st
 
 
 @torch.no_grad()
-def evaluate_policy(actor, eval_env, device, n_episodes: int) -> float:
+def evaluate_policy(actor, eval_env, device, n_episodes: int, base_seed: int) -> float:
     actor.eval()
     returns = []
-    for _ in range(n_episodes):
-        obs, _ = eval_env.reset()
+    for ep in range(n_episodes):
+        obs, _ = eval_env.reset(seed=base_seed + ep)
         done = False
         ep_ret = 0.0
         while not done:
@@ -235,7 +235,13 @@ def train(args: Args, run_dir: str, trial: optuna.Trial | None = None) -> float:
                 )
 
         if pr.should_eval(global_step) or (global_step + 1 >= args.total_timesteps):
-            eval_return = evaluate_policy(actor, eval_env, device, n_episodes=args.eval_episodes)
+            eval_return = evaluate_policy(
+                actor,
+                eval_env,
+                device,
+                n_episodes=args.eval_episodes,
+                base_seed=args.seed + 100_000 + (global_step // max(args.eval_interval, 1)) * 1_000,
+            )
             logger.log_scalar("charts/eval_return", eval_return, global_step)
             best_eval = max(best_eval, eval_return)
             pr.report(eval_return, global_step)
