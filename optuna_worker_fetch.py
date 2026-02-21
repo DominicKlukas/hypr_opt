@@ -65,7 +65,7 @@ def main() -> None:
     if task not in TASK_TO_MODULE_PATH[model]:
         raise ValueError(f"Unknown FETCH_TASK={task} for model={model}. Use one of: {', '.join(TASK_TO_MODULE_PATH[model])}")
 
-    storage = make_storage()
+    storage = retry_db(make_storage)
     study_name = os.environ.get("OPTUNA_STUDY", f"fetch_{task}_{model}")
 
     sampler = optuna.samplers.TPESampler(constant_liar=True, multivariate=True)
@@ -75,14 +75,20 @@ def main() -> None:
         interval_steps=int(os.environ.get("PRUNER_INTERVAL_STEPS", "1")),
     )
 
-    study = optuna.create_study(
+    study = retry_db(lambda: optuna.create_study(
         study_name=study_name,
         storage=storage,
         load_if_exists=True,
         direction="maximize",
         sampler=sampler,
         pruner=pruner,
-    )
+    ))
+
+    jitter_max_s = float(os.environ.get("WORKER_STARTUP_JITTER_MAX_S", "0"))
+    if jitter_max_s > 0:
+        import random
+        import time
+        time.sleep(random.uniform(0, jitter_max_s))
 
     n_trials = int(os.environ.get("N_TRIALS", "2"))
     objective_fn = resolve_objective(model, task)

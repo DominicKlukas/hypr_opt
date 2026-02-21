@@ -6,7 +6,7 @@
 #SBATCH --time=24:00:00
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=24G
-#SBATCH --array=1-64
+#SBATCH --array=1-64%8
 
 set -euo pipefail
 
@@ -25,6 +25,7 @@ export NUMEXPR_NUM_THREADS=${SLURM_CPUS_PER_TASK}
 
 export OPTUNA_STORAGE_URL='postgresql+psycopg2://postgres.xcmxfgzjnqowuceuqdny:OptunahmsTITAN@aws-0-us-west-2.pooler.supabase.com:6543/postgres?sslmode=require'
 export PYTHONPATH=~/project/equivariant-rl:$PYTHONPATH
+export WORKER_STARTUP_JITTER_MAX_S=20
 
 export FETCH_MODEL=equivariant
 export FETCH_TASK=slide
